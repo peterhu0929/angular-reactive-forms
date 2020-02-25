@@ -2,29 +2,50 @@
   <mat-sidenav-content>
     <form [formGroup]="myForm" (ngSubmit)="submitForm()" novalidate>
 
+      <!-- ID -->
+      <mat-form-field class="example-full-width">
+        <input matInput placeholder="員工編號" formControlName="id">
+        <!-- error -->
+        <mat-error *ngIf="errorHandling('id', 'required')">
+          You must provide a<strong> ID</strong>
+        </mat-error>
+      </mat-form-field>
+
       <!-- Name -->
       <mat-form-field class="example-full-width">
-        <input matInput placeholder="Name" formControlName="name">
+        <input matInput placeholder="姓名" formControlName="name">
+        <!-- error -->
+        <mat-error *ngIf="errorHandling('name', 'required')">
+          You must provide a<strong> name</strong>
+        </mat-error>
       </mat-form-field>
 
       <!-- Email -->
       <mat-form-field class="example-full-width">
-        <input matInput placeholder="Email" formControlName="email">
+        <mat-label>Email</mat-label>
+        <input matInput placeholder="Ex. pat@example.com" formControlName="email" [errorStateMatcher]="matcher">
+        <!-- <mat-error *ngIf="errorHandling('email', 'email') && !errorHandling('email', 'required')">
+          Please enter a valid email address
+        </mat-error> -->
+        <!-- error -->
+        <mat-error *ngIf="errorHandling('email', 'required')">
+          You must provide a<strong> email</strong>
+        </mat-error>
       </mat-form-field>
 
       <!-- Gender -->
       <div class="misc-bottom-padding">
-        <mat-label>Gender:</mat-label>
+        <mat-label>性別</mat-label>
         <mat-radio-group aria-label="Select an option" formControlName="gender">
-          <mat-radio-button value="Male">Male</mat-radio-button>
-          <mat-radio-button value="Female">Female</mat-radio-button>
+          <mat-radio-button value="Male">男</mat-radio-button>
+          <mat-radio-button value="Female">女</mat-radio-button>
         </mat-radio-group>
       </div>
 
       <!-- Date picker -->
       <mat-form-field>
-        <input matInput readonly [matDatepicker]="picker" placeholder="Date of birth" formControlName="dob"
-          (dateChange)="date($event)">
+        <input matInput readonly [matDatepicker]="picker" placeholder="生日" formControlName="dob"
+          (dateChange)="toDate($event)">
         <mat-datepicker-toggle matSuffix [for]="picker"></mat-datepicker-toggle>
         <mat-datepicker #picker></mat-datepicker>
       </mat-form-field>
@@ -33,7 +54,8 @@
       <mat-form-field>
         <mat-label>Grade</mat-label>
         <mat-select [(value)]="selected" formControlName="grade">
-          <mat-option [value]="gradeArray" *ngFor="let gradeArray of GradeArray">{{gradeArray}}
+          <mat-option [value]="gradeArray" *ngFor="let gradeArray of GradeArray">
+            {{gradeArray}}
           </mat-option>
         </mat-select>
       </mat-form-field>
