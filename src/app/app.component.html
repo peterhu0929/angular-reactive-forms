@@ -1,6 +1,6 @@
 <mat-sidenav-container>
   <mat-sidenav-content>
-    <form [formGroup]="myForm" (ngSubmit)="submitForm()" novalidate>
+    <form [formGroup]="myForm" (ngSubmit)="addData(myForm.value)" novalidate>
 
       <!-- ID -->
       <mat-form-field class="example-full-width">
@@ -21,24 +21,23 @@
       </mat-form-field>
 
       <!-- Email -->
-      <mat-form-field class="example-full-width">
+      <!-- <mat-form-field class="example-full-width">
         <mat-label>Email</mat-label>
         <input matInput placeholder="Ex. pat@example.com" formControlName="email" [errorStateMatcher]="matcher">
-        <!-- <mat-error *ngIf="errorHandling('email', 'email') && !errorHandling('email', 'required')">
+        <mat-error *ngIf="errorHandling('email', 'email') && !errorHandling('email', 'required')">
           Please enter a valid email address
-        </mat-error> -->
-        <!-- error -->
+        </mat-error>
         <mat-error *ngIf="errorHandling('email', 'required')">
           You must provide a<strong> email</strong>
         </mat-error>
-      </mat-form-field>
+      </mat-form-field> -->
 
       <!-- Gender -->
       <div class="misc-bottom-padding">
         <mat-label>性別</mat-label>
         <mat-radio-group aria-label="Select an option" formControlName="gender">
-          <mat-radio-button value="Male">男</mat-radio-button>
-          <mat-radio-button value="Female">女</mat-radio-button>
+          <mat-radio-button value="男">男</mat-radio-button>
+          <mat-radio-button value="女">女</mat-radio-button>
         </mat-radio-group>
       </div>
 
@@ -52,16 +51,17 @@
 
       <!-- Class -->
       <mat-form-field>
-        <mat-label>Grade</mat-label>
-        <mat-select [(value)]="selected" formControlName="grade">
-          <mat-option [value]="gradeArray" *ngFor="let gradeArray of GradeArray">
-            {{gradeArray}}
+        <mat-label>葷素</mat-label>
+        <!-- <mat-select [(value)]="selected" formControlName="foodhabit"> -->
+        <mat-select formControlName="foodhabit">
+          <mat-option [value]="gradeArray.ItemValue" *ngFor="let gradeArray of FoodHabitList">
+            {{gradeArray.ItemText}}
           </mat-option>
         </mat-select>
       </mat-form-field>
-
       <!-- Add Subjects -->
-      <mat-form-field class="multiple-items">
+      <!-- #region Material Chips -->
+      <!-- <mat-form-field class="multiple-items">
         <mat-chip-list #chipList>
           <mat-chip *ngFor="let subjectsArray of SubjectsArray" [selectable]="selectable" [removable]="removable"
             (removed)="remove(subjectsArray)">
@@ -72,23 +72,139 @@
             [matChipInputSeparatorKeyCodes]="separatorKeysCodes" [matChipInputAddOnBlur]="addOnBlur"
             (matChipInputTokenEnd)="add($event)">
         </mat-chip-list>
-      </mat-form-field>
+      </mat-form-field> -->
+      <!-- #endregion -->
 
       <!-- Submit -->
       <div class="button-wrapper">
-        <button mat-flat-button color="primary">Submit</button>
+        <button mat-flat-button color="primary">新增</button>
       </div>
 
     </form>
   </mat-sidenav-content>
 </mat-sidenav-container>
 
+<mat-paginator #paginator [length]="totalCount" [pageIndex]="0" [pageSize]="5" [pageSizeOptions]="[5, 10, 15]">
+</mat-paginator>
+<table mat-table [dataSource]="tridataTable" matSort>
+  <ng-container matColumnDef="EDIT_BUTTON">
+    <th mat-header-cell *matHeaderCellDef>編輯</th>
+    <td mat-cell *matCellDef="let row">
+      <button *ngIf=!row.isDisabled mat-mini-fab color="primary" (click)="row.isDisabled=true;selectRecord(row)">
+        <span matTooltip="Edit">
+          <mat-icon>edit</mat-icon>
+        </span>
+      </button>
+      <button *ngIf=row.isDisabled mat-mini-fab color="warn" (click)="row.isDisabled=false">
+        <span matTooltip="Cancel">
+          <mat-icon>clear</mat-icon>
+        </span>
+      </button>
+      <button *ngIf=row.isDisabled mat-mini-fab color="primary" (click)="updateData(row);row.isDisabled=false">
+        <span matTooltip=" Confirm">
+          <mat-icon>send</mat-icon>
+        </span>
+      </button>
+    </td>
+  </ng-container>
+  <ng-container matColumnDef="DELETE_BUTTON">
+    <th mat-header-cell *matHeaderCellDef>停用</th>
+    <td mat-cell *matCellDef="let row">
+      <button mat-mini-fab color="warn" (click)="deleteData(row)">
+        <mat-icon>delete</mat-icon>
+      </button>
+    </td>
+  </ng-container>
+  <!-- <ng-container matColumnDef="DELETE_YN">
+    <th mat-header-cell *matHeaderCellDef>是否中止合約
+    </th>
+    <td mat-cell *matCellDef="let row" [ngStyle]="{'color':changeColor(row)}">
+    </td>
+  </ng-container> -->
 
+  <ng-container matColumnDef="id">
+    <th mat-header-cell *matHeaderCellDef mat-sort-header>員工編號</th>
+    <td mat-cell *matCellDef="let row">
+      {{ row.id }}
+    </td>
+  </ng-container>
 
+  <ng-container matColumnDef="name">
+    <th mat-header-cell *matHeaderCellDef mat-sort-header>姓名</th>
+    <td mat-cell *matCellDef="let row">
+      <div *ngIf="row.isDisabled">
+        <mat-form-field class="inputSize">
+          <input matInput [(ngModel)]="row.name">
+        </mat-form-field>
+      </div>
+      <div *ngIf="!row.isDisabled">
+        {{ row.name }}
+      </div>
+    </td>
+  </ng-container>
 
+  <ng-container matColumnDef="gender">
+    <th mat-header-cell *matHeaderCellDef mat-sort-header>性別</th>
+    <td mat-cell *matCellDef="let row">
+      <div *ngIf="row.isDisabled">
+        <mat-form-field class="inputSize">
+          <mat-select [(ngModel)]="row.gender">
+            <mat-option value="男">男</mat-option>
+            <mat-option value="女">女</mat-option>
+          </mat-select>
+        </mat-form-field>
+      </div>
+      <div *ngIf="!row.isDisabled">
+        {{ row.gender }}
+      </div>
+    </td>
+  </ng-container>
 
+  <ng-container matColumnDef="dob">
+    <th mat-header-cell *matHeaderCellDef mat-sort-header>生日</th>
+    <td mat-cell *matCellDef="let row">
+      <div *ngIf="row.isDisabled">
+        <mat-form-field>
+          <input matInput [matDatepicker]="dobpicker" [(ngModel)]="row.dob">
+          <mat-datepicker-toggle matSuffix [for]="dobpicker"></mat-datepicker-toggle>
+          <mat-datepicker #dobpicker></mat-datepicker>
+        </mat-form-field>
+      </div>
+      <div *ngIf="!row.isDisabled">
+        {{row.dob|date:'yyyy/MM/dd'}}
+      </div>
+    </td>
+  </ng-container>
 
-
-
-
-<!-- <router-outlet></router-outlet> -->
+  <ng-container matColumnDef="driver">
+    <th mat-header-cell *matHeaderCellDef>交通方式</th>
+    <td mat-cell *matCellDef="let row">
+      <div *ngIf="row.isDisabled">
+        <mat-form-field>
+          <input matInput [(ngModel)]="row.driver">
+        </mat-form-field>
+      </div>
+      <div *ngIf="!row.isDisabled">
+        {{ row.driver }}
+      </div>
+    </td>
+  </ng-container>
+  <ng-container matColumnDef="foodhabit">
+    <th mat-header-cell *matHeaderCellDef mat-sort-header>葷素</th>
+    <td mat-cell *matCellDef="let row">
+      <div *ngIf="row.isDisabled">
+        <mat-form-field class="inputSize">
+          <mat-select [(ngModel)]="row.foodhabit">
+            <mat-option value="葷">葷</mat-option>
+            <mat-option value="素">素</mat-option>
+          </mat-select>
+        </mat-form-field>
+      </div>
+      <div *ngIf="!row.isDisabled">
+        {{ row.foodhabit }}
+      </div>
+    </td>
+  </ng-container>
+  <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+  <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+</table>
